@@ -1,6 +1,6 @@
-# Databricks Scala Guide
+# IronCore Labs Scala Guide
 
-With over 800 contributors, Spark is to the best of our knowledge the largest open-source project in Big Data and the most active project written in Scala. This guide draws from our experience coaching and working with engineers contributing to Spark as well as our [Databricks](http://databricks.com/) engineering team.
+This was forked from the Databricks Scala Guide (git@github.com:IronCoreLabs/scala-style-guide.git) and tweaked to fit our use at [IronCore Labs](http://ironcorelabs.com/).
 
 Code is __written once__ by its author, but __read and modified multiple times__ by lots of other engineers. As most bugs actually come from future modification of the code, we need to optimize our codebase for long-term, global readability and maintainability. The best way to achieve this is to write simple code.
 
@@ -66,9 +66,7 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
 
 
 ## <a name='history'>Document History</a>
-- 2015-03-16: initial version
-- 2015-05-25: added [override Modifier](#override_modifier) section
-- 2015-08-23: downgraded the severity of some rules from "do NOT" to "avoid"
+- 2015-10-21: forked from DataBricks, initial modifications
 
 
 ## <a name='syntactic'>Syntactic Style</a>
@@ -108,7 +106,7 @@ We mostly follow Java's and Scala's standard naming conventions.
 
 ### <a name='linelength'>Line Length</a>
 
-- Limit lines to 100 characters.
+- Limit lines to 120 characters.
 - The only exceptions are import statements and URLs (although even for those, try to keep them under 100 chars).
 
 
@@ -131,6 +129,7 @@ In general:
   }
   ```
 
+[?? Can we make scalariform do this ??]
 - For method declarations, use 4 space indentation for its parameters when they don't fit in a single line. Return types can be either on the same line as the last parameter, or put to next line with 2 space indent.
   ```scala
   def newAPIHadoopFile[K, V, F <: NewInputFormat[K, V]](
@@ -271,7 +270,7 @@ Use Java docs style instead of Scala docs style.
  * my third line.
  */
 
-/** In Spark, we don't use the ScalaDoc style so this
+/** We don't use the ScalaDoc style so this
   * is not correct.
   */
 ```
@@ -283,15 +282,15 @@ If a class is long and has many methods, group them logically into different sec
 ```scala
 class DataFrame {
 
-  ///////////////////////////////////////////////////////////////////////////
-  // DataFrame operations
-  ///////////////////////////////////////////////////////////////////////////
+  /*=========================================================================
+   * DataFrame operations
+   *=======================================================================*/
 
   ...
 
-  ///////////////////////////////////////////////////////////////////////////
-  // RDD operations
-  ///////////////////////////////////////////////////////////////////////////
+  /*=========================================================================
+   * RDD operations
+   *=======================================================================*/
 
   ...
 }
@@ -308,19 +307,11 @@ Of course, the situation in which a class grows this long is strongly discourage
   * `java.*` and `javax.*`
   * `scala.*`
   * Third-party libraries (`org.*`, `com.*`, etc)
-  * Project classes (`com.databricks.*` or `org.apache.spark` if you are working on Spark)
+  * Project classes (`com.ironcorelabs.*`)
 - Within each group, imports should be sorted in alphabetic ordering.
-- You can use IntelliJ's import organizer to handle this automatically, using the following config:
-
-  ```
-  java
-  javax
-  _______ blank line _______
-  scala
-  _______ blank line _______
-  all other imports
-  _______ blank line _______
-  com.databricks  // or org.apache.spark if you are working on Spark
+- Group imports of multiple entities from the same package with curly braces, like
+  ```scala
+  import com.ironcorelabs.Identity.{ MockService, ProductionService }
   ```
 
 
@@ -388,7 +379,7 @@ class Child extends Parent {
   // The following method does NOT override Parent.hello,
   // because the two Maps have different types.
   // If we added "override" modifier, the compiler would've caught it.
-  def hello(data: Map[String, String]): Unit = {
+  def hello(data: Map[Int, String]): Unit = {
     print("This is supposed to override the parent method, but it is actually not!")
   }
 }
@@ -415,6 +406,7 @@ class MyClass {
 
 ### <a name='call_by_name'>Call by Name</a>
 
+[ ?? Do we agree with this?? ]
 __Avoid using call by name__. Use `() => T` explicitly.
 
 Background: Scala allows method parameters to be defined by-name, e.g. the following would work:
@@ -549,7 +541,7 @@ __Avoid using implicits__, unless:
 
 When implicits are used, we must ensure that another engineer who did not author the code can understand the semantics of the usage without reading the implicit definition itself. Implicits have very complicated resolution rules and make the code base extremely difficult to understand. From Twitter's Effective Scala guide: "If you do find yourself using implicits, always ask yourself if there is a way to achieve the same thing without their help."
 
-If you must use them (e.g. enriching some DSL), do not overload implicit methods, i.e. make sure each implicit method has distinct names, so users can selectively import them.
+If you must use them (e.g. enriching some DSL), do not overload implicit methods, i.e. make sure each implicit method has a distinct name, so users can selectively import it.
 ```scala
 // Don't do the following, as users cannot selectively import only one of the methods.
 object ImplicitHolder {
@@ -579,6 +571,8 @@ object ImplicitHolder {
   }
   ```
   This ensures that we do not catch `NonLocalReturnControl` (as explained in [Return Statements](#return-statements)).
+
+[ ?? I expect some disagreement with this. ?? ]
 
 - Do NOT use `Try` in APIs, i.e. do NOT return Try in any methods.Prefer explicitly throwing exceptions for abnormal execution and Java style try/catch for exception handling.
 
@@ -629,6 +623,7 @@ One of Scala's powerful features is monadic chaining. Almost everything (e.g. co
 - If it takes more than 5 seconds to figure out what the logic is, try hard to think about how you can expression the same functionality without using monadic chaining. As a general rule, watch out for flatMaps and folds.
 - A chain should almost always be broken after a flatMap (because of the type change).
 
+[ ?? I don't agree that the second approach is more readable. ?? ]
 A chain can often be made more understandable by giving the intermediate result a variable name, by explicitly typing the variable, and by breaking it down into more procedural style. As a contrived example:
 ```scala
 class Person(val data: Map[String, String])
@@ -680,7 +675,7 @@ There are 3 recommended ways to make concurrent accesses to shared states safe. 
   private[this] val map = java.util.Collections.synchronizedMap(new java.util.HashMap[String, String])
   ```
 
-3. Explicit synchronization by synchronizing all critical sections: can used to guard multiple variables. Similar to 2, the JVM JIT compiler can remove the synchronization overhead via biased locking.
+3. Explicit synchronization by synchronizing all critical sections: can be used to guard multiple variables. Similar to 2, the JVM JIT compiler can remove the synchronization overhead via biased locking.
   ```scala
   class Manager {
     private[this] var count = 0
@@ -826,7 +821,7 @@ class MyClass {
 
 ## <a name='java'>Java Interoperability</a>
 
-This section covers guidelines for building Java compatible APIs. These do not apply if the component you are building does not require interoperability with Java. It is mostly drawn from our experience in developing the Java APIs for Spark.
+This section covers guidelines for building Java compatible APIs. These do not apply if the component you are building does not require interoperability with Java. It is mostly drawn from DataBrick's experience in developing the Java APIs for Spark.
 
 
 ### <a name='java-missing-features'>Java Features Missing from Scala</a>
@@ -887,7 +882,7 @@ Do NOT use multi-parameter lists.
   def select(exprs: Expression*): DataFrame = { ... }
   ```
 
-- Note that abstract vararg methods does NOT work for Java, due to a Scala compiler bug ([SI-1459](https://issues.scala-lang.org/browse/SI-1459), [SI-9013](https://issues.scala-lang.org/browse/SI-9013)).
+- Note that abstract vararg methods do NOT work for Java, due to a Scala compiler bug ([SI-1459](https://issues.scala-lang.org/browse/SI-1459), [SI-9013](https://issues.scala-lang.org/browse/SI-9013)).
 
 - Be careful with overloading varargs methods. Overloading a vararg method with another vararg type can break source compatibility.
   ```scala
@@ -918,7 +913,7 @@ Do NOT use multi-parameter lists.
 
 ### <a name='java-implicits'>Implicits</a>
 
-Do NOT use implicits, for a class or method. This includes `ClassTag`, `TypeTag`.
+Do NOT use implicits for a class or method. This includes `ClassTag`, `TypeTag`.
 ```scala
 class JavaFriendlyAPI {
   // This is NOT Java friendly, since the method contains an implicit parameter (ClassTag).
