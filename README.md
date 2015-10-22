@@ -11,11 +11,10 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
 
   0. [Document History](#history)
   1. [Syntactic Style](#syntactic)
+    - [Formatting Code](#formatting)
     - [Naming Convention](#naming)
     - [Line Length](#linelength)
     - [Rule of 30](#rule_of_30)
-    - [Spacing and Indentation](#indent)
-    - [Blank Lines (Vertical Whitespace)](#blanklines)
     - [Parentheses](#parentheses)
     - [Curly Braces](#curly)
     - [Long Literals](#long_literal)
@@ -71,6 +70,10 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
 
 ## <a name='syntactic'>Syntactic Style</a>
 
+### <a name='formatting'>Formatting Code</a>
+We use `scalariform` to format our Scala code, and our projects are set to auto-format on compile. Thus we don't have a lot of rules about spacing, indentation, and formatting. We let scalariform worry about that.
+
+
 ### <a name='naming'>Naming Convention</a>
 
 We mostly follow Java's and Scala's standard naming conventions.
@@ -118,76 +121,6 @@ In general:
 
 - A method should contain less than 30 lines of code.
 - A class should contain less than 30 methods.
-
-
-### <a name='indent'>Spacing and Indentation</a>
-
-- Use 2-space indentation in general.
-  ```scala
-  if (true) {
-    println("Wow!")
-  }
-  ```
-
-[?? Can we make scalariform do this ??]
-- For method declarations, use 4 space indentation for its parameters when they don't fit in a single line. Return types can be either on the same line as the last parameter, or put to next line with 2 space indent.
-  ```scala
-  def newAPIHadoopFile[K, V, F <: NewInputFormat[K, V]](
-      path: String,
-      fClass: Class[F],
-      kClass: Class[K],
-      vClass: Class[V],
-      conf: Configuration = hadoopConfiguration): RDD[(K, V)] = {
-    // method body
-  }
-
-  def newAPIHadoopFile[K, V, F <: NewInputFormat[K, V]](
-      path: String,
-      fClass: Class[F],
-      kClass: Class[K],
-      vClass: Class[V],
-      conf: Configuration = hadoopConfiguration)
-    : RDD[(K, V)] = {
-    // method body
-  }
-  ```
-
-- For classes whose header doesn't fit in a single line, put the extend on the next line with 2 space indent, and add a blank line after class header.
-  ```scala
-  class Foo(
-      val param1: String,  // 4 space indent for parameters
-      val param2: String,
-      val param3: Array[Byte])
-    extends FooInterface  // 2 space here
-    with Logging {
-
-    def firstMethod(): Unit = { ... }  // blank line above
-  }
-  ```
-
-- Do NOT use vertical alignment. They draw attention to the wrong parts of the code and make the aligned code harder to change in the future.
-  ```scala
-  // Don't align vertically
-  val plus     = "+"
-  val minus    = "-"
-  val multiply = "*"
-
-  // Do the following
-  val plus = "+"
-  val minus = "-"
-  val multiply = "*"
-  ```
-
-
-### <a name='blanklines'>Blank Lines (Vertical Whitespace)</a>
-
-- A single blank line appears:
-  - Between consecutive members (or initializers) of a class: fields, constructors, methods, nested classes, static initializers, instance initializers.
-    - Exception: A blank line between two consecutive fields (having no other code between them) is optional. Such blank lines are used as needed to create logical groupings of fields.
-  - Within method bodies, as needed to create logical groupings of statements.
-  - Optionally before the first member or after the last member of the class (neither encouraged nor discouraged).
-- Use one or two blank line(s) to separate class definitions.
-- Excessive number of blank lines are discouraged.
 
 
 ### <a name='parentheses'>Parentheses</a>
@@ -265,9 +198,13 @@ Use Java docs style instead of Scala docs style.
 /** This is a correct one-liner, short description. */
 
 /**
- * This is correct multi-line JavaDoc comment. And
+ * This is a correct multi-line JavaDoc-style comment. And
  * this is my second line, and if I keep typing, this would be
  * my third line.
+ *
+ * NOTE: this DOES generate scaladoc, even though it is called
+ * the JavaDco style. The difference is whether the text starts
+ * on the same line as the start of the comment.
  */
 
 /** We don't use the ScalaDoc style so this
@@ -278,25 +215,7 @@ Use Java docs style instead of Scala docs style.
 
 ### <a name='ordering_class'>Ordering within a Class</a>
 
-If a class is long and has many methods, group them logically into different sections, and use comment headers to organize them.
-```scala
-class DataFrame {
-
-  /*=========================================================================
-   * DataFrame operations
-   *=======================================================================*/
-
-  ...
-
-  /*=========================================================================
-   * RDD operations
-   *=======================================================================*/
-
-  ...
-}
-```
-
-Of course, the situation in which a class grows this long is strongly discouraged, and is generally reserved only for building certain public APIs.
+A class should not be so long, with so many methods, that it requires thigns to be grouped into different sections. If it is necessary to create a large class (such as a class supporting a public API, for some reason) and there are different logical sections, they should be moved into nested objects or separate classes.
 
 
 ### <a name='imports'>Imports</a>
@@ -306,12 +225,24 @@ Of course, the situation in which a class grows this long is strongly discourage
 - In addition, sort imports in the following order:
   * `java.*` and `javax.*`
   * `scala.*`
+  * `scalaz.*`
   * Third-party libraries (`org.*`, `com.*`, etc)
   * Project classes (`com.ironcorelabs.*`)
-- Within each group, imports should be sorted in alphabetic ordering.
-- Group imports of multiple entities from the same package with curly braces, like
+- Within each group, imports should be sorted in alphabetic ordering, ignoring case. Note that _ preceeds every character. For example,
   ```scala
-  import com.ironcorelabs.Identity.{ MockService, ProductionService }
+  import scalaz.syntax.apply._
+  import scalaz.syntax.std.option._
+  import scalaz.syntax.validation._
+  import scalaz.{ Validation, ValidationNel }
+  import org.http4s._
+  import org.http4s.dsl._
+  import org.http4s.headers._
+  import org.http4s.server._
+  import org.http4s.server.blaze.BlazeBuilder
+  ```
+- Group imports of multiple entities from the same package with curly braces. For example,
+  ```scala
+  import com.ironcorelabs.identity.{ MockService, ProductionService }
   ```
 
 
@@ -406,14 +337,14 @@ class MyClass {
 
 ### <a name='call_by_name'>Call by Name</a>
 
-[ ?? Do we agree with this?? ]
-__Avoid using call by name__. Use `() => T` explicitly.
+If you use either call-by-name parameters or the equivalent thunk `() => T`, and you reference the parameter more than once in the method, you must memoize the value before referencing it. For example
 
 Background: Scala allows method parameters to be defined by-name, e.g. the following would work:
 ```scala
 def print(value: => Int): Unit = {
-  println(value)
-  println(value + 1)
+  val localValue = value
+  println(localValue)
+  println(localValue + 1)
 }
 
 var a = 0
@@ -424,7 +355,19 @@ def inc(): Int = {
 
 print(inc())
 ```
-in the above code, `inc()` is passed into `print` as a closure and is executed (twice) in the print method, rather than being passed in as a value `1`. The main problem with call-by-name is that the caller cannot differentiate between call-by-name and call-by-value, and thus cannot know for sure whether the expression will be executed or not (or maybe worse, multiple times). This is especially dangerous for expressions that have side-effect.
+In the above code, `inc()` is passed into `print` as a closure and would be executed (twice) in the method, rather than being passed in as a value `1`, if the `localValue` was not in place. The main problem with call-by-name is that the caller cannot differentiate between call-by-name and call-by-value, and thus cannot know for sure whether the expression will be executed or not (or maybe worse, multiple times). This is especially dangerous for expressions that have side effects. The memoization avoids multiple evaluations.
+
+Similarly,
+```scala
+def print(value: () => Int): Unit = {
+  val tmpVal = value()
+  println(tmpVal)
+  println(tmpVal + 1)
+}
+
+print(() => inc())
+```
+If there's a chance no code path in the function might reference the local variable, make it a `lazy val` to avoid evaluating the parameter unnecessarily.
 
 
 ### <a name='multi-param-list'>Multiple Parameter Lists</a>
@@ -574,7 +517,7 @@ object ImplicitHolder {
 
 [ ?? I expect some disagreement with this. ?? ]
 
-- Do NOT use `Try` in APIs, i.e. do NOT return Try in any methods.Prefer explicitly throwing exceptions for abnormal execution and Java style try/catch for exception handling.
+- Do NOT use `Try` in APIs, i.e. do NOT return `Try` in any methods. Prefer explicitly throwing exceptions for abnormal execution and Java style try/catch for exception handling.
 
   Background information: Scala provides monadic error handling (through `Try`, `Success`, and `Failure`) that facilitates chaining of actions. However, we found from our experience that the use of it often leads to more levels of nesting that are harder to read. In addition, it is often unclear what the semantics are for expected errors vs exceptions because those are not encoded in `Try`. As a result, we discourage the use of `Try` for error handling. In particular:
 
@@ -619,16 +562,17 @@ object ImplicitHolder {
 
 One of Scala's powerful features is monadic chaining. Almost everything (e.g. collections, Option, Future, Try) is a monad and operations on them can be chained together. This is an incredibly powerful concept, but chaining should be used sparingly. In particular:
 
-- Avoid chaining (and/or nesting) more than 3 operations.
+- Avoid chaining (and/or nesting) too deeply. We don't have any hard or fast limit here - when you have chained things too far, break the chain and introduce a variable to hold the partial result.
 - If it takes more than 5 seconds to figure out what the logic is, try hard to think about how you can expression the same functionality without using monadic chaining. As a general rule, watch out for flatMaps and folds.
 - A chain should almost always be broken after a flatMap (because of the type change).
 
-[ ?? I don't agree that the second approach is more readable. ?? ]
 A chain can often be made more understandable by giving the intermediate result a variable name, by explicitly typing the variable, and by breaking it down into more procedural style. As a contrived example:
+
+[ ?? Need a different example - the second approach here is worse than the first. ?? ]
 ```scala
 class Person(val data: Map[String, String])
 val database = Map[String, Person]
-// Sometimes the client can store "null" value in the  store "address"
+// Sometimes the client can store "null" in the key "address"
 
 // A monadic chaining approach
 def getAddress(name: String): Option[String] = {
