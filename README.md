@@ -215,7 +215,7 @@ Use Java docs style instead of Scala docs style.
 
 ### <a name='ordering_class'>Ordering within a Class</a>
 
-A class should not be so long, with so many methods, that it requires thigns to be grouped into different sections. If it is necessary to create a large class (such as a class supporting a public API, for some reason) and there are different logical sections, they should be moved into nested objects or separate classes.
+A class should not be so long, with so many methods, that it requires elements to be grouped into different sections. If it is necessary to create a large class (such as a class supporting a public API, for some reason) and there are different logical sections, they should be moved into nested objects or separate classes.
 
 
 ### <a name='imports'>Imports</a>
@@ -228,7 +228,7 @@ A class should not be so long, with so many methods, that it requires thigns to 
   * `scalaz.*`
   * Third-party libraries (`org.*`, `com.*`, etc)
   * Project classes (`com.ironcorelabs.*`)
-- Within each group, imports should be sorted in alphabetic ordering, ignoring case. Note that _ preceeds every character. For example,
+- Within each group, imports should be sorted in alphabetic ordering, ignoring case. Note that `_` sorts ahead of every character. For example,
   ```scala
   import scalaz.syntax.apply._
   import scalaz.syntax.std.option._
@@ -765,7 +765,7 @@ class MyClass {
 
 ## <a name='java'>Java Interoperability</a>
 
-This section covers guidelines for building Java compatible APIs. These do not apply if the component you are building does not require interoperability with Java. It is mostly drawn from DataBrick's experience in developing the Java APIs for Spark.
+This section covers guidelines for building Java compatible APIs. NOTE: at this time, we don't anticipate needing to build Java compatible APIs. You will find plenty of IronCore Labs code that does not adhere to these guidelines. However, in the event that we do require interoperability with Java, we can refer to this section. It is mostly drawn from DataBrick's experience in developing the Java APIs for Spark.
 
 
 ### <a name='java-missing-features'>Java Features Missing from Scala</a>
