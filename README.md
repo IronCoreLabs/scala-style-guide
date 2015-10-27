@@ -519,7 +519,7 @@ object ImplicitHolder {
   ```scala
   class UserService {
     /** Look up a user's profile in the user database. */
-    def get(userId: Int): [UserError \/ User]
+    def get(userId: Int): UserError \/ User
   }
   ```
 
