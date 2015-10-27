@@ -34,7 +34,7 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
     - [Return Statements](#return)
     - [Recursion and Tail Recursion](#recursion)
     - [Implicits](#implicits)
-    - [Exception Handling, i.e. Try vs try](#exception)
+    - [Exception Handling, i.e. There is no Try, only \/](#exception)
     - [Options](#option)
     - [Monadic Chaining](#chaining)
   3. [Concurrency](#concurrency)
@@ -500,7 +500,7 @@ object ImplicitHolder {
 ```
 
 
-## <a name='exception'>Exception Handling, i.e. Try vs try</a>
+## <a name='exception'>Exception Handling, i.e. There is no Try, only \/</a>
 
 - Do NOT catch Throwable or Exception. Use `scala.util.control.NonFatal`:
   ```scala
