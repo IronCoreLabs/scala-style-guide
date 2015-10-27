@@ -515,33 +515,13 @@ object ImplicitHolder {
   ```
   This ensures that we do not catch `NonLocalReturnControl` (as explained in [Return Statements](#return-statements)).
 
-[ ?? I expect some disagreement with this. ?? ]
-
-- Do NOT use `Try` in APIs, i.e. do NOT return `Try` in any methods. Prefer explicitly throwing exceptions for abnormal execution and Java style try/catch for exception handling.
-
-  Background information: Scala provides monadic error handling (through `Try`, `Success`, and `Failure`) that facilitates chaining of actions. However, we found from our experience that the use of it often leads to more levels of nesting that are harder to read. In addition, it is often unclear what the semantics are for expected errors vs exceptions because those are not encoded in `Try`. As a result, we discourage the use of `Try` for error handling. In particular:
-
-  As a contrived example:
+- Do NOT use `Try` in APIs, i.e. do NOT return `Try` in any methods. Prefer disjunctions instead, with the error type as the left member of the disjunction. For instance,
   ```scala
   class UserService {
     /** Look up a user's profile in the user database. */
-    def get(userId: Int): Try[User]
+    def get(userId: Int): [UserError \/ User]
   }
   ```
-  is better written as
-  ```scala
-  class UserService {
-    /**
-     * Look up a user's profile in the user database.
-     * @return None if the user is not found.
-     * @throws DatabaseConnectionException when we have trouble connecting to the database/
-     */
-    @throws(DatabaseConnectionException)
-    def get(userId: Int): Option[User]
-  }
-  ```
-  The 2nd one makes it very obvious error cases the caller needs to handle.
-
 
 ### <a name='option'>Options</a>
 
