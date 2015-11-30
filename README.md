@@ -1,6 +1,6 @@
-# Databricks Scala Guide
+# IronCore Labs Scala Guide
 
-With over 800 contributors, Spark is to the best of our knowledge the largest open-source project in Big Data and the most active project written in Scala. This guide draws from our experience coaching and working with engineers contributing to Spark as well as our [Databricks](http://databricks.com/) engineering team.
+This was forked from the Databricks Scala Guide (git@github.com:IronCoreLabs/scala-style-guide.git) and tweaked to fit our use at [IronCore Labs](http://ironcorelabs.com/).
 
 Code is __written once__ by its author, but __read and modified multiple times__ by lots of other engineers. As most bugs actually come from future modification of the code, we need to optimize our codebase for long-term, global readability and maintainability. The best way to achieve this is to write simple code.
 
@@ -11,11 +11,10 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
 
   0. [Document History](#history)
   1. [Syntactic Style](#syntactic)
+    - [Formatting Code](#formatting)
     - [Naming Convention](#naming)
     - [Line Length](#linelength)
     - [Rule of 30](#rule_of_30)
-    - [Spacing and Indentation](#indent)
-    - [Blank Lines (Vertical Whitespace)](#blanklines)
     - [Parentheses](#parentheses)
     - [Curly Braces](#curly)
     - [Long Literals](#long_literal)
@@ -35,7 +34,7 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
     - [Return Statements](#return)
     - [Recursion and Tail Recursion](#recursion)
     - [Implicits](#implicits)
-    - [Exception Handling, i.e. Try vs try](#exception)
+    - [Exception Handling, i.e. There is no Try, only \/](#exception)
     - [Options](#option)
     - [Monadic Chaining](#chaining)
   3. [Concurrency](#concurrency)
@@ -66,12 +65,14 @@ Scala is an incredibly powerful language that is capable of many paradigms. We h
 
 
 ## <a name='history'>Document History</a>
-- 2015-03-16: initial version
-- 2015-05-25: added [override Modifier](#override_modifier) section
-- 2015-08-23: downgraded the severity of some rules from "do NOT" to "avoid"
+- 2015-10-21: forked from DataBricks, initial modifications
 
 
 ## <a name='syntactic'>Syntactic Style</a>
+
+### <a name='formatting'>Formatting Code</a>
+We use `scalariform` to format our Scala code, and our projects are set to auto-format on compile. Thus we don't have a lot of rules about spacing, indentation, and formatting. We let scalariform worry about that.
+
 
 ### <a name='naming'>Naming Convention</a>
 
@@ -108,7 +109,7 @@ We mostly follow Java's and Scala's standard naming conventions.
 
 ### <a name='linelength'>Line Length</a>
 
-- Limit lines to 100 characters.
+- Limit lines to 120 characters.
 - The only exceptions are import statements and URLs (although even for those, try to keep them under 100 chars).
 
 
@@ -120,75 +121,6 @@ In general:
 
 - A method should contain less than 30 lines of code.
 - A class should contain less than 30 methods.
-
-
-### <a name='indent'>Spacing and Indentation</a>
-
-- Use 2-space indentation in general.
-  ```scala
-  if (true) {
-    println("Wow!")
-  }
-  ```
-
-- For method declarations, use 4 space indentation for its parameters when they don't fit in a single line. Return types can be either on the same line as the last parameter, or put to next line with 2 space indent.
-  ```scala
-  def newAPIHadoopFile[K, V, F <: NewInputFormat[K, V]](
-      path: String,
-      fClass: Class[F],
-      kClass: Class[K],
-      vClass: Class[V],
-      conf: Configuration = hadoopConfiguration): RDD[(K, V)] = {
-    // method body
-  }
-
-  def newAPIHadoopFile[K, V, F <: NewInputFormat[K, V]](
-      path: String,
-      fClass: Class[F],
-      kClass: Class[K],
-      vClass: Class[V],
-      conf: Configuration = hadoopConfiguration)
-    : RDD[(K, V)] = {
-    // method body
-  }
-  ```
-
-- For classes whose header doesn't fit in a single line, put the extend on the next line with 2 space indent, and add a blank line after class header.
-  ```scala
-  class Foo(
-      val param1: String,  // 4 space indent for parameters
-      val param2: String,
-      val param3: Array[Byte])
-    extends FooInterface  // 2 space here
-    with Logging {
-
-    def firstMethod(): Unit = { ... }  // blank line above
-  }
-  ```
-
-- Do NOT use vertical alignment. They draw attention to the wrong parts of the code and make the aligned code harder to change in the future.
-  ```scala
-  // Don't align vertically
-  val plus     = "+"
-  val minus    = "-"
-  val multiply = "*"
-
-  // Do the following
-  val plus = "+"
-  val minus = "-"
-  val multiply = "*"
-  ```
-
-
-### <a name='blanklines'>Blank Lines (Vertical Whitespace)</a>
-
-- A single blank line appears:
-  - Between consecutive members (or initializers) of a class: fields, constructors, methods, nested classes, static initializers, instance initializers.
-    - Exception: A blank line between two consecutive fields (having no other code between them) is optional. Such blank lines are used as needed to create logical groupings of fields.
-  - Within method bodies, as needed to create logical groupings of statements.
-  - Optionally before the first member or after the last member of the class (neither encouraged nor discouraged).
-- Use one or two blank line(s) to separate class definitions.
-- Excessive number of blank lines are discouraged.
 
 
 ### <a name='parentheses'>Parentheses</a>
@@ -266,12 +198,16 @@ Use Java docs style instead of Scala docs style.
 /** This is a correct one-liner, short description. */
 
 /**
- * This is correct multi-line JavaDoc comment. And
+ * This is a correct multi-line JavaDoc-style comment. And
  * this is my second line, and if I keep typing, this would be
  * my third line.
+ *
+ * NOTE: this DOES generate scaladoc, even though it is called
+ * the JavaDco style. The difference is whether the text starts
+ * on the same line as the start of the comment.
  */
 
-/** In Spark, we don't use the ScalaDoc style so this
+/** We don't use the ScalaDoc style so this
   * is not correct.
   */
 ```
@@ -279,25 +215,7 @@ Use Java docs style instead of Scala docs style.
 
 ### <a name='ordering_class'>Ordering within a Class</a>
 
-If a class is long and has many methods, group them logically into different sections, and use comment headers to organize them.
-```scala
-class DataFrame {
-
-  ///////////////////////////////////////////////////////////////////////////
-  // DataFrame operations
-  ///////////////////////////////////////////////////////////////////////////
-
-  ...
-
-  ///////////////////////////////////////////////////////////////////////////
-  // RDD operations
-  ///////////////////////////////////////////////////////////////////////////
-
-  ...
-}
-```
-
-Of course, the situation in which a class grows this long is strongly discouraged, and is generally reserved only for building certain public APIs.
+A class should not be so long, with so many methods, that it requires elements to be grouped into different sections. If it is necessary to create a large class (such as a class supporting a public API, for some reason) and there are different logical sections, they should be moved into nested objects or separate classes.
 
 
 ### <a name='imports'>Imports</a>
@@ -307,20 +225,24 @@ Of course, the situation in which a class grows this long is strongly discourage
 - In addition, sort imports in the following order:
   * `java.*` and `javax.*`
   * `scala.*`
+  * `scalaz.*`
   * Third-party libraries (`org.*`, `com.*`, etc)
-  * Project classes (`com.databricks.*` or `org.apache.spark` if you are working on Spark)
-- Within each group, imports should be sorted in alphabetic ordering.
-- You can use IntelliJ's import organizer to handle this automatically, using the following config:
-
+  * Project classes (`com.ironcorelabs.*`)
+- Within each group, imports should be sorted in alphabetic ordering, ignoring case. Note that `_` sorts ahead of every character. For example,
+  ```scala
+  import scalaz.syntax.apply._
+  import scalaz.syntax.std.option._
+  import scalaz.syntax.validation._
+  import scalaz.{ Validation, ValidationNel }
+  import org.http4s._
+  import org.http4s.dsl._
+  import org.http4s.headers._
+  import org.http4s.server._
+  import org.http4s.server.blaze.BlazeBuilder
   ```
-  java
-  javax
-  _______ blank line _______
-  scala
-  _______ blank line _______
-  all other imports
-  _______ blank line _______
-  com.databricks  // or org.apache.spark if you are working on Spark
+- Group imports of multiple entities from the same package with curly braces. For example,
+  ```scala
+  import com.ironcorelabs.identity.{ MockService, ProductionService }
   ```
 
 
@@ -388,7 +310,7 @@ class Child extends Parent {
   // The following method does NOT override Parent.hello,
   // because the two Maps have different types.
   // If we added "override" modifier, the compiler would've caught it.
-  def hello(data: Map[String, String]): Unit = {
+  def hello(data: Map[Int, String]): Unit = {
     print("This is supposed to override the parent method, but it is actually not!")
   }
 }
@@ -415,13 +337,14 @@ class MyClass {
 
 ### <a name='call_by_name'>Call by Name</a>
 
-__Avoid using call by name__. Use `() => T` explicitly.
+If you use either call-by-name parameters or the equivalent thunk `() => T`, and you reference the parameter more than once in the method, you must memoize the value before referencing it. For example
 
 Background: Scala allows method parameters to be defined by-name, e.g. the following would work:
 ```scala
 def print(value: => Int): Unit = {
-  println(value)
-  println(value + 1)
+  val localValue = value
+  println(localValue)
+  println(localValue + 1)
 }
 
 var a = 0
@@ -432,7 +355,19 @@ def inc(): Int = {
 
 print(inc())
 ```
-in the above code, `inc()` is passed into `print` as a closure and is executed (twice) in the print method, rather than being passed in as a value `1`. The main problem with call-by-name is that the caller cannot differentiate between call-by-name and call-by-value, and thus cannot know for sure whether the expression will be executed or not (or maybe worse, multiple times). This is especially dangerous for expressions that have side-effect.
+In the above code, `inc()` is passed into `print` as a closure and would be executed (twice) in the method, rather than being passed in as a value `1`, if the `localValue` was not in place. The main problem with call-by-name is that the caller cannot differentiate between call-by-name and call-by-value, and thus cannot know for sure whether the expression will be executed or not (or maybe worse, multiple times). This is especially dangerous for expressions that have side effects. The memoization avoids multiple evaluations.
+
+Similarly,
+```scala
+def print(value: () => Int): Unit = {
+  val tmpVal = value()
+  println(tmpVal)
+  println(tmpVal + 1)
+}
+
+print(() => inc())
+```
+If there's a chance no code path in the function might reference the local variable, make it a `lazy val` to avoid evaluating the parameter unnecessarily.
 
 
 ### <a name='multi-param-list'>Multiple Parameter Lists</a>
@@ -549,7 +484,7 @@ __Avoid using implicits__, unless:
 
 When implicits are used, we must ensure that another engineer who did not author the code can understand the semantics of the usage without reading the implicit definition itself. Implicits have very complicated resolution rules and make the code base extremely difficult to understand. From Twitter's Effective Scala guide: "If you do find yourself using implicits, always ask yourself if there is a way to achieve the same thing without their help."
 
-If you must use them (e.g. enriching some DSL), do not overload implicit methods, i.e. make sure each implicit method has distinct names, so users can selectively import them.
+If you must use them (e.g. enriching some DSL), do not overload implicit methods, i.e. make sure each implicit method has a distinct name, so users can selectively import it.
 ```scala
 // Don't do the following, as users cannot selectively import only one of the methods.
 object ImplicitHolder {
@@ -565,7 +500,7 @@ object ImplicitHolder {
 ```
 
 
-## <a name='exception'>Exception Handling, i.e. Try vs try</a>
+## <a name='exception'>Exception Handling, i.e. There is no Try, only \/</a>
 
 - Do NOT catch Throwable or Exception. Use `scala.util.control.NonFatal`:
   ```scala
@@ -580,31 +515,13 @@ object ImplicitHolder {
   ```
   This ensures that we do not catch `NonLocalReturnControl` (as explained in [Return Statements](#return-statements)).
 
-- Do NOT use `Try` in APIs, i.e. do NOT return Try in any methods.Prefer explicitly throwing exceptions for abnormal execution and Java style try/catch for exception handling.
-
-  Background information: Scala provides monadic error handling (through `Try`, `Success`, and `Failure`) that facilitates chaining of actions. However, we found from our experience that the use of it often leads to more levels of nesting that are harder to read. In addition, it is often unclear what the semantics are for expected errors vs exceptions because those are not encoded in `Try`. As a result, we discourage the use of `Try` for error handling. In particular:
-
-  As a contrived example:
+- Do NOT use `Try` in APIs, i.e. do NOT return `Try` in any methods. Prefer disjunctions instead, with the error type as the left member of the disjunction. For instance,
   ```scala
   class UserService {
     /** Look up a user's profile in the user database. */
-    def get(userId: Int): Try[User]
+    def get(userId: Int): UserError \/ User
   }
   ```
-  is better written as
-  ```scala
-  class UserService {
-    /**
-     * Look up a user's profile in the user database.
-     * @return None if the user is not found.
-     * @throws DatabaseConnectionException when we have trouble connecting to the database/
-     */
-    @throws(DatabaseConnectionException)
-    def get(userId: Int): Option[User]
-  }
-  ```
-  The 2nd one makes it very obvious error cases the caller needs to handle.
-
 
 ### <a name='option'>Options</a>
 
@@ -625,15 +542,17 @@ object ImplicitHolder {
 
 One of Scala's powerful features is monadic chaining. Almost everything (e.g. collections, Option, Future, Try) is a monad and operations on them can be chained together. This is an incredibly powerful concept, but chaining should be used sparingly. In particular:
 
-- Avoid chaining (and/or nesting) more than 3 operations.
+- Avoid chaining (and/or nesting) too deeply. We don't have any hard or fast limit here - when you have chained things too far, break the chain and introduce a variable to hold the partial result.
 - If it takes more than 5 seconds to figure out what the logic is, try hard to think about how you can expression the same functionality without using monadic chaining. As a general rule, watch out for flatMaps and folds.
 - A chain should almost always be broken after a flatMap (because of the type change).
 
 A chain can often be made more understandable by giving the intermediate result a variable name, by explicitly typing the variable, and by breaking it down into more procedural style. As a contrived example:
+
+[ ?? Need a different example - the second approach here is worse than the first. ?? ]
 ```scala
 class Person(val data: Map[String, String])
 val database = Map[String, Person]
-// Sometimes the client can store "null" value in the  store "address"
+// Sometimes the client can store "null" in the key "address"
 
 // A monadic chaining approach
 def getAddress(name: String): Option[String] = {
@@ -680,7 +599,7 @@ There are 3 recommended ways to make concurrent accesses to shared states safe. 
   private[this] val map = java.util.Collections.synchronizedMap(new java.util.HashMap[String, String])
   ```
 
-3. Explicit synchronization by synchronizing all critical sections: can used to guard multiple variables. Similar to 2, the JVM JIT compiler can remove the synchronization overhead via biased locking.
+3. Explicit synchronization by synchronizing all critical sections: can be used to guard multiple variables. Similar to 2, the JVM JIT compiler can remove the synchronization overhead via biased locking.
   ```scala
   class Manager {
     private[this] var count = 0
@@ -826,7 +745,7 @@ class MyClass {
 
 ## <a name='java'>Java Interoperability</a>
 
-This section covers guidelines for building Java compatible APIs. These do not apply if the component you are building does not require interoperability with Java. It is mostly drawn from our experience in developing the Java APIs for Spark.
+This section covers guidelines for building Java compatible APIs. NOTE: at this time, we don't anticipate needing to build Java compatible APIs. You will find plenty of IronCore Labs code that does not adhere to these guidelines. However, in the event that we do require interoperability with Java, we can refer to this section. It is mostly drawn from DataBrick's experience in developing the Java APIs for Spark.
 
 
 ### <a name='java-missing-features'>Java Features Missing from Scala</a>
@@ -887,7 +806,7 @@ Do NOT use multi-parameter lists.
   def select(exprs: Expression*): DataFrame = { ... }
   ```
 
-- Note that abstract vararg methods does NOT work for Java, due to a Scala compiler bug ([SI-1459](https://issues.scala-lang.org/browse/SI-1459), [SI-9013](https://issues.scala-lang.org/browse/SI-9013)).
+- Note that abstract vararg methods do NOT work for Java, due to a Scala compiler bug ([SI-1459](https://issues.scala-lang.org/browse/SI-1459), [SI-9013](https://issues.scala-lang.org/browse/SI-9013)).
 
 - Be careful with overloading varargs methods. Overloading a vararg method with another vararg type can break source compatibility.
   ```scala
@@ -918,7 +837,7 @@ Do NOT use multi-parameter lists.
 
 ### <a name='java-implicits'>Implicits</a>
 
-Do NOT use implicits, for a class or method. This includes `ClassTag`, `TypeTag`.
+Do NOT use implicits for a class or method. This includes `ClassTag`, `TypeTag`.
 ```scala
 class JavaFriendlyAPI {
   // This is NOT Java friendly, since the method contains an implicit parameter (ClassTag).
